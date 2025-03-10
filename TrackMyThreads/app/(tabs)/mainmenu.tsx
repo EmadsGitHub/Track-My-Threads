@@ -1,4 +1,3 @@
-
 import { 
     MaterialIcons,  // Material Design icons
     FontAwesome,    // Font Awesome icons
@@ -29,25 +28,33 @@ interface SideBannerProps {
 }  
 
 const CalendarScreen = () => {
+    const [selectedDate, setSelectedDate] = useState('');
+    
+    // Combine both fixed marks and selected date
+    const markedDates = {
+        '2025-02-26': {marked: true, dotColor: '#3674B5'},
+        ...(selectedDate ? {[selectedDate]: {selected: true, selectedColor: '#3674B5'}} : {})
+    };
+    
     return (
-      <Calendar style={styles.calendar}
-        // Basic calendar
-        markedDates={{
-          '2025-02-26': {marked: true, dotColor: '#3674B5'},
-          '2024-03-17': {selected: true, selectedColor: '#3674B5'}
-        }}
+      <Calendar 
+        style={styles.calendar}
+        markedDates={markedDates}
         onDayPress={(day: DateData) => {
           console.log('selected day', day);
+          setSelectedDate(day.dateString);
         }}
         theme={{
             backgroundColor: '#D1F8EF',
             calendarBackground: '#A1E3F9',
             textDayHeaderFontWeight: 'bold',
             textDayHeaderFontSize: 16,
-            textDayHeaderFontColor: '#578FCA',
-            dayTextColor: '#578FCA',
-            textSectionTitleColor: '#578FCA',
-            
+            textDayHeaderFontColor: '#3674B5',
+            dayTextColor: '#3674B5',
+            textSectionTitleColor: '#3674B5',
+            textDisabledColor: '#578FCA',
+            selectedDayBackgroundColor: '#3674B5', // Blue background for selected date
+            selectedDayTextColor: '#FFFFFF',  
         }}
       />
     );
@@ -123,7 +130,7 @@ const MainMenu = () => {
             </View>
             <View style={styles.mainmenucontent}>
                 <CalendarScreen />
-                <Text>Main Menu</Text>
+                <Text style={styles.mainmenutexttitle}>Selected Clothes</Text>
             </View>            
         </View>
     );
@@ -203,8 +210,15 @@ const styles = StyleSheet.create({
         borderTopRightRadius: 85,
     },
     calendar: {
-        width: 300
+        width: 300,
+        backgroundColor: '#A1E3F9'
     },
+    mainmenutexttitle: {
+        padding: 20,
+        fontSize: 30,
+        fontFamily: 'Sora'
+    }
+    
 
 });
 
