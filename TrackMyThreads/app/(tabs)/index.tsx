@@ -1,10 +1,12 @@
 import { StyleSheet } from 'react-native';
 import {NavigationContainer} from '@react-navigation/native';
 import Login from './login';
-import SignUp from './signup';
+import SignUp from '../screens/signup';
+import Laundry from './laundry';
 import { ThemedView } from '@/components/ThemedView';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import RequestReset from './requestreset';
+import RequestReset from '../screens/requestreset';
+import AddClothing from '../screens/addclothing';
 import MainMenu from './mainmenu';
 const Stack = createNativeStackNavigator();
 
@@ -21,6 +23,15 @@ export default function HomeScreen() {
           name="MainMenu" 
           component={MainMenu} 
         />
+        <Stack.Screen 
+          name="Laundry" 
+          component={Laundry} 
+        />  
+        <Stack.Screen 
+          name="AddClothing" 
+          component={AddClothing} 
+        />  
+
         {/* Add more screens */}
       </Stack.Navigator>
 

@@ -1,6 +1,4 @@
 import React from 'react';
-import {NavigationContainer} from '@react-navigation/native';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import { 
     MaterialIcons,  // Material Design icons
     FontAwesome,    // Font Awesome icons
@@ -18,8 +16,7 @@ import {
     ActivityIndicator,
     Button   // For loading state
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { router } from 'expo-router';
 
 type RootStackParamList = {
   Login: undefined;
@@ -27,7 +24,7 @@ type RootStackParamList = {
 };
 
 const Login = () => {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
 
   return (
     <View style={styles.container}>
@@ -58,18 +55,18 @@ const Login = () => {
           </View>
           <TouchableOpacity 
             style={styles.loginButton} 
-            onPress={() => navigation.navigate('MainMenu')}
+            onPress={() => router.push('/mainmenu')}
           >
             <Text style={styles.loginButtonText}>Login</Text>
           </TouchableOpacity>
-          <Link href="/requestreset" style={styles.resetlink}>
+          <Link href="/screens/requestreset" style={styles.resetlink}>
                 Forgot Password?
           </Link>     
           <TouchableOpacity style={styles.GoogleButton}>
             <AntDesign name="google" size={24} color="#3674B5" />
             <Text style={styles.GoogleButtonText}>   Continue with Google</Text>
           </TouchableOpacity>
-          <Link href="/signup" style={styles.signuplink}>
+          <Link href="/screens/signup" style={styles.signuplink}>
                 Don't have an account? Sign up.
           </Link> 
         </View>
