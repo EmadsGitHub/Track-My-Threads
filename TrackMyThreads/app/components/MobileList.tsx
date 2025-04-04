@@ -14,12 +14,12 @@ interface ClothingItem {
   wearsBeforeWash: number;
   configuredWears: number;
   type: string;
+  lastWashed: string | null;
 }
 // Props for the MobileList component
 interface MobileListProps {
   items: ClothingItem[];
   onItemPress: (item: ClothingItem) => void;
-  
 }
 
 const MobileList = ({ items, onItemPress }: MobileListProps) => {

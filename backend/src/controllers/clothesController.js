@@ -32,6 +32,17 @@ const ClothesController = {
             res.status(201).json({ message: 'Clothes added successfully' });
         });
     },
+    deleteClothes: (req, res) => {
+        const id = req.params.id;
+        ClothesModel.deleteClothes(id, (err) => {
+            if (err) {
+                return res.status(500).json({ error: err.message });
+            }   
+            res.status(200).json({ message: 'Clothes deleted successfully' });
+        });
+    },
+    
+
     uploadClothing: (req, res) => {
         const { id, name, image, daysBeforeWash, wearsBeforeWash, configuredWears, type } = req.body;
         ClothesModel.uploadClothing(id, name, image, daysBeforeWash, wearsBeforeWash, configuredWears, type, (err) => {
@@ -42,19 +53,41 @@ const ClothesController = {
         });
     },  
     uploadClothingCatalog: (req, res) => {
-        const { id, name, image, daysBeforeWash, wearsBeforeWash, configuredWears, type } = req.body;
-        ClothesModel.uploadClothingCatalog(id, name, image, daysBeforeWash, wearsBeforeWash, configuredWears, type, (err) => {
-            if (err) {
-                return res.status(500).json({ error: err.message });
-            }   
-            res.status(201).json({ message: 'Clothing catalog uploaded successfully' });
+        const { Name, Image, DaysBeforeWash, WearsBeforeWash, ConfiguredWears, Type, LastWashed } = req.body;
+
+        console.log('Received request to upload:', { 
+            Name, 
+            ImageLength: Image ? Image.length : 'undefined', 
+            DaysBeforeWash, 
+            WearsBeforeWash, 
+            ConfiguredWears, 
+            Type,
+            LastWashed: LastWashed || 'not provided'
         });
+        
+        ClothesModel.uploadClothingCatalog(
+            null,
+            Name,
+            Image,
+            DaysBeforeWash,
+            WearsBeforeWash,
+            ConfiguredWears,
+            Type,
+            LastWashed || null, // Use null if LastWashed is not provided
+            (err) => {
+                if (err) {
+                    console.error('Error in uploadClothingCatalog:', err.message);
+                    return res.status(500).json({ error: err.message });
+                }   
+                res.status(201).json({ message: 'Clothing catalog uploaded successfully' });
+            }
+        );
     },
 
     getClothingImage: (req, res) => {
-        const id = req.params.id;
+        const name = req.params.name;
         
-        ClothesModel.getClothingImage(id, (err, imageData) => {
+        ClothesModel.getClothingImage(name, (err, imageData) => {
             if (err) {
                 return res.status(500).json({ error: err.message });
             }
@@ -77,13 +110,13 @@ const ClothesController = {
     // Function to update a clothing item's wear count
     updateClothingItem: (req, res) => {
         const name = req.params.name;
-        const { wearsBeforeWash } = req.body;
+        const { wearsBeforeWash, lastWashed} = req.body;
         
         if (wearsBeforeWash === undefined) {
             return res.status(400).json({ error: 'wearsBeforeWash is required' });
         }
         
-        ClothesModel.updateClothingItem(name, wearsBeforeWash, (err) => {
+        ClothesModel.updateClothingItem(name, wearsBeforeWash, lastWashed, (err) => {
             if (err) {
                 return res.status(500).json({ error: err.message });
             }
@@ -91,9 +124,22 @@ const ClothesController = {
             res.status(200).json({ 
                 message: `Successfully updated wear count for item ${name}`,
                 name: name,
-                wearsBeforeWash: wearsBeforeWash
+                wearsBeforeWash: wearsBeforeWash,
+                lastWashed: lastWashed || null
             });
         });
+    },
+
+    editClothingCatalog: (req, res) => {
+        const name = req.params.name;
+        const { ConfiguredWears } = req.body;
+        ClothesModel.editClothingCatalog(name, ConfiguredWears, (err) => {
+            if (err) {
+                return res.status(500).json({ error: err.message });
+            }
+            res.status(200).json({ message: 'Clothing catalog updated successfully' });
+        });
+        console.log(`Updated ConfiguredWears for item ${name} to ${ConfiguredWears}`);
     },
     
     // Function to clear the laundry list
@@ -111,13 +157,22 @@ const ClothesController = {
     },
     
     // Function to delete clothes
-    deleteClothes: (req, res) => {
-        const name = req.params.name;
-        ClothesModel.deleteClothes(name, (err) => {
+    deleteLaundryList: (req, res) => {
+        const id = req.params.id;
+        ClothesModel.deleteLaundryList(id, (err) => {
             if (err) {
                 return res.status(500).json({ error: err.message });
             }
-            res.status(200).json({ message: 'Clothes deleted successfully' });
+            res.status(200).json({ message: 'Laundry list deleted successfully' });
+        });
+    },
+    deleteClothingCatalog: (req, res) => {
+        const id = req.params.id;
+        ClothesModel.deleteClothingCatalog(id, (err) => {
+            if (err) {
+                return res.status(500).json({ error: err.message });
+            }
+            res.status(200).json({ message: 'Clothing catalog deleted successfully' });
         });
     },
     createLaundryListTable: (req, res) => {

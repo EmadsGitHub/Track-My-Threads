@@ -4,16 +4,16 @@ const path = require('path');
 
 // Array of clothing items that can be randomly selected
 const myClothing = [
-    {name: "Blue Hoodie", image: "backend/src/imagefolder/bluehoodie.png", daysBeforeWash: 0, wearsBeforeWash: 0, configuredWears: 2, type: "Top"},
-    {name: "Yellow Hoodie", image: "backend/src/imagefolder/yellowhoodie.png", daysBeforeWash: 0, wearsBeforeWash: 0, configuredWears: 2, type: "Top"},
-    {name:"HOSA Hoodie", image: "backend/src/imagefolder/hosahoodie.png", daysBeforeWash: 0, wearsBeforeWash: 0, configuredWears: 2, type: "Top"},
-    {name: "Waterloo Hoodie", image: "backend/src/imagefolder/waterloohoodie.png", daysBeforeWash: 0, wearsBeforeWash: 0, configuredWears: 2, type: "Top"},
-    {name: "White Sweatpants", image: "backend/src/imagefolder/whitesweatpants.png", daysBeforeWash: 0, wearsBeforeWash: 0, configuredWears: 2, type: "Bottom"},
-    {name: "Blue Sweatpants", image: "backend/src/imagefolder/bluesweatpants.png", daysBeforeWash: 0, wearsBeforeWash: 0, configuredWears: 2, type: "Bottom"},
-    {name: "Gray Sweatpants", image: "backend/src/imagefolder/graysweatpants.png", daysBeforeWash: 0, wearsBeforeWash: 0, configuredWears: 2, type: "Bottom"},
-    {name: "Navy Sweatpants", image: "backend/src/imagefolder/navysweatpants.png", daysBeforeWash: 0, wearsBeforeWash: 0, configuredWears: 2, type: "Bottom"},
-    {name: "Yellow T-Shirt", image: "backend/src/imagefolder/yellowtshirt.png", daysBeforeWash: 0, wearsBeforeWash: 0, configuredWears: 2, type: "Top"}, 
-    {name: "Maroon T-Shirt", image: "backend/src/imagefolder/maroontshirt.png", daysBeforeWash: 0, wearsBeforeWash: 0, configuredWears: 2, type: "Top"},
+    {name: "Blue Hoodie", image: "backend/src/imagefolder/bluehoodie.png", daysBeforeWash: 0, wearsBeforeWash: 0, configuredWears: 5, type: "Top", lastWashed: null},
+    {name: "Yellow Hoodie", image: "backend/src/imagefolder/yellowhoodie.png", daysBeforeWash: 0, wearsBeforeWash: 0, configuredWears: 5, type: "Top", lastWashed: null},
+    {name:"HOSA Hoodie", image: "backend/src/imagefolder/hosahoodie.png", daysBeforeWash: 0, wearsBeforeWash: 0, configuredWears: 5, type: "Top", lastWashed: null},
+    {name: "Waterloo Hoodie", image: "backend/src/imagefolder/waterloohoodie.png", daysBeforeWash: 0, wearsBeforeWash: 0, configuredWears: 5, type: "Top", lastWashed: null},
+    {name: "White Sweatpants", image: "backend/src/imagefolder/whitesweatpants.png", daysBeforeWash: 0, wearsBeforeWash: 0, configuredWears: 3, type: "Bottom", lastWashed: null},
+    {name: "Blue Sweatpants", image: "backend/src/imagefolder/bluesweatpants.png", daysBeforeWash: 0, wearsBeforeWash: 0, configuredWears: 3, type: "Bottom", lastWashed: null},
+    {name: "Gray Sweatpants", image: "backend/src/imagefolder/graysweatpants.png", daysBeforeWash: 0, wearsBeforeWash: 0, configuredWears: 3, type: "Bottom", lastWashed: null},
+    {name: "Navy Sweatpants", image: "backend/src/imagefolder/navysweatpants.png", daysBeforeWash: 0, wearsBeforeWash: 0, configuredWears: 3, type: "Bottom", lastWashed: null},
+    {name: "Yellow T-Shirt", image: "backend/src/imagefolder/yellowtshirt.png", daysBeforeWash: 0, wearsBeforeWash: 0, configuredWears: 2, type: "Top", lastWashed: null}, 
+    {name: "Maroon T-Shirt", image: "backend/src/imagefolder/maroontshirt.png", daysBeforeWash: 0, wearsBeforeWash: 0, configuredWears: 2, type: "Top", lastWashed: null},
 ];
 
 // Function to insert clothing items into the database
@@ -27,8 +27,8 @@ const insertClothingItems = (db) => {
                 const imageBuffer = fs.readFileSync(path.resolve(process.cwd(), item.image));
                 
                 const sql = `
-                    INSERT INTO clothingcatalog (name, image, daysBeforeWash, wearsBeforeWash, configuredWears, type) 
-                    VALUES (?, ?, ?, ?, ?, ?)
+                    INSERT INTO clothingcatalog (name, image, daysBeforeWash, wearsBeforeWash, configuredWears, type, lastWashed) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
                 `;
 
                 // Execute the SQL query with the image buffer
@@ -105,7 +105,7 @@ const seedDatabase = (db) => {
 const db = new sqlite3.Database("C:/Users/elina/Track-My-Threads/backend/clothes.db");
 
 // Seed the database
-seedDatabase(db);
+insertClothingItems(db);
 
     // Close the database connection when the script finishes
 process.on('exit', () => {

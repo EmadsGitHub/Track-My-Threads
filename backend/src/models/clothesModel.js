@@ -73,6 +73,7 @@ const createClothingCatalogTable = () => {
         "WearsBeforeWash"	INTEGER NOT NULL,
         "ConfiguredWears"	INTEGER NOT NULL,
         "Type"	TEXT NOT NULL,
+        "LastWashed"	TEXT,
         PRIMARY KEY("ID","Name","Image")
         );
     `;
@@ -98,6 +99,15 @@ const uploadClothing=(id, name, image, daysBeforeWash, wearsBeforeWash, configur
 }
 // Function to add items to the database for a specific date
 const addClothes = (date, items, callback) => {
+    // Keep track of how many items have been processed
+    let completedCount = 0;
+    let hasError = false;
+    
+    // Handle case of empty items array
+    if (items.length === 0) {
+        return callback(null); // Success with no items
+    }
+    
     items.forEach(item => {
         const sql = `
             INSERT INTO clothes (date, item) 
@@ -105,19 +115,30 @@ const addClothes = (date, items, callback) => {
         `;
 
         db.run(sql, [date, item], function(err) {
+            // If we've already encountered an error, don't do anything more
+            if (hasError) return;
+            
             if (err) {
+                hasError = true;
                 return callback(err);
             }
+            
             console.log(`Added ${item} for ${date}`);
+            completedCount++;
+            
+            // If all items have been processed successfully, call the callback
+            if (completedCount === items.length) {
+                callback(null); // Success!
+            }
         });
     });
 };
 
-const deleteClothes = (name, callback) => {
+const deleteLaundryList = (id, callback) => {
     const sql = `
-        DELETE FROM clothes WHERE name = ?
+        DELETE FROM laundrylist WHERE id = ?
     `;
-    db.run(sql, [name], function(err) {
+    db.run(sql, [id], function(err) {
         if (err) {
             return callback(err);   
         }
@@ -125,7 +146,7 @@ const deleteClothes = (name, callback) => {
             return callback(new Error('Item not found'));
         }
         callback(null);
-        console.log(`Deleted item with name ${name}`);
+        console.log(`Deleted item with id ${id}`);
     });
     
     
@@ -133,7 +154,7 @@ const deleteClothes = (name, callback) => {
 // Function to get all clothes
 const getAllClothesFromCatalog = (callback) => {
     db.all(
-        `SELECT ID, Name, DaysBeforeWash, WearsBeforeWash, ConfiguredWears, Type 
+        `SELECT ID, Name, DaysBeforeWash, WearsBeforeWash, ConfiguredWears, Type, LastWashed 
          FROM clothingcatalog`,
         (err, rows) => {
           if (err) {
@@ -155,29 +176,89 @@ const getAllClothes = (callback) => {
     );
 };
 
-const uploadClothingCatalog = (id, name, image, daysBeforeWash, wearsBeforeWash, configuredWears, type, callback) => {
-    const sql = `
-        INSERT INTO clothingcatalog (ID, Name, Image, DaysBeforeWash, WearsBeforeWash, ConfiguredWears, Type)
-        VALUES (?, ?, ?, ?, ?, ?, ?);
-    `;
-        db.run(sql, [name, image, daysBeforeWash, wearsBeforeWash, configuredWears, type], function(err){
+const deleteClothes = (id, callback) => {
+    const sql = `DELETE FROM clothes WHERE id = ?`;
+    db.run(sql, [id], function(err) {
         if (err) {
             return callback(err);
         }
-        console.log(`Uploaded clothing catalog item with name ${name} and id ${id}`);
-    }); 
+        if (this.changes === 0) {
+            return callback(new Error('Item not found'));
+        }
+        callback(null);
+    });
+};
+
+const uploadClothingCatalog = (id, name, image, daysBeforeWash, wearsBeforeWash, configuredWears, type, lastWashed, callback) => {
+    // Convert base64 image to buffer if it's a string (from frontend)
+    let imageBuffer;
+    
+    try {
+        if (!image) {
+            console.error('Image data is undefined or null');
+            return callback && callback(new Error('Image data is required'));
+        }
+        
+        if (typeof image === 'string') {
+            // Check if the image is already a base64 string
+            if (image.startsWith('data:image')) {
+                // Extract the base64 part if it's a data URL
+                const base64Data = image.split(',')[1];
+                imageBuffer = Buffer.from(base64Data, 'base64');
+            } else {
+                // Assume it's already a base64 string without the data URL prefix
+                imageBuffer = Buffer.from(image, 'base64');
+            }
+            console.log(`Converted base64 image to buffer for ${name}, size: ${imageBuffer.length} bytes`);
+        } else if (Buffer.isBuffer(image)) {
+            // If it's already a buffer, use it as is
+            imageBuffer = image;
+            console.log(`Using existing buffer for ${name}, size: ${imageBuffer.length} bytes`);
+        } else if (typeof image === 'object') {
+            // If it's an object (maybe from multer or another middleware), try to get the buffer
+            imageBuffer = image.buffer || image;
+            console.log(`Using buffer from object for ${name}`);
+        } else {
+            throw new Error('Invalid image format. Expected base64 string or buffer.');
+        }
+        
+        const sql = `
+            INSERT INTO clothingcatalog (Name, Image, DaysBeforeWash, WearsBeforeWash, ConfiguredWears, Type, LastWashed)
+            VALUES (?, ?, ?, ?, ?, ?, ?);
+        `;
+        
+        db.run(sql, [name, imageBuffer, daysBeforeWash, wearsBeforeWash, configuredWears, type, lastWashed], function(err) {
+            if (err) {
+                console.error(`Error uploading clothing item ${name}:`, err.message);
+                return callback && callback(err);
+            }
+            console.log(`Uploaded clothing catalog item with name ${name}`);
+            return callback && callback(null, this.lastID);
+        });
+    } catch (error) {
+        console.error(`Error processing image for ${name}:`, error.message);
+        return callback && callback(error);
+    }
 }
 
 // Function to update a clothing item in the catalog
-const updateClothingItem = (name, wearsBeforeWash, callback) => {
-    console.log(`Updating clothing item ${name} to set wear count to ${wearsBeforeWash}`);
-    const sql = `
-        UPDATE clothingcatalog 
-        SET WearsBeforeWash = ? 
-        WHERE Name = ?
-    `;
+const updateClothingItem = (name, wearsBeforeWash, lastWashed, callback) => {
+    console.log(`Updating clothing item ${name} to set wear count to ${wearsBeforeWash} and last washed to ${lastWashed || 'null'}`);
     
-    db.run(sql, [wearsBeforeWash, name], function(err) {
+    // If lastWashed is provided, update it along with the wear count
+    const sql = lastWashed ? 
+        `UPDATE clothingcatalog 
+         SET WearsBeforeWash = ?, LastWashed = ? 
+         WHERE Name = ?` :
+        `UPDATE clothingcatalog 
+         SET WearsBeforeWash = ? 
+         WHERE Name = ?`;
+    
+    const params = lastWashed ? 
+        [wearsBeforeWash, lastWashed, name] : 
+        [wearsBeforeWash, name];
+    
+    db.run(sql, params, function(err) {
         if (err) {
             console.error(`Error updating clothing item ${name}:`, err.message);
             return callback(err);
@@ -188,7 +269,28 @@ const updateClothingItem = (name, wearsBeforeWash, callback) => {
             return callback(new Error(`Item with name ${name} not found`));
         }
         
-        console.log(`Successfully updated wear count for item ${name} to ${wearsBeforeWash}`);
+        console.log(`Successfully updated wear count for item ${name} to ${wearsBeforeWash}${lastWashed ? ` and LastWashed to ${lastWashed}` : ''}`);
+        callback(null);
+    });
+};
+
+const editClothingCatalog = (name, ConfiguredWears, callback) => {
+    console.log(`Attempting to update ConfiguredWears for item ${name} to ${ConfiguredWears}`);
+    
+    const sql = `UPDATE clothingcatalog SET ConfiguredWears = ? WHERE Name = ?`;
+    
+    db.run(sql, [ConfiguredWears, name], function(err) {
+        if (err) {
+            console.error(`Error updating ConfiguredWears for ${name}:`, err.message);
+            return callback(err);
+        }
+        
+        if (this.changes === 0) {
+            console.log(`No item found with name ${name} to update ConfiguredWears`);
+            return callback(new Error(`Item with name ${name} not found`));
+        }
+        
+        console.log(`Successfully updated ConfiguredWears for item ${name} to ${ConfiguredWears}`);
         callback(null);
     });
 };
@@ -209,10 +311,18 @@ const clearLaundryList = (callback) => {
     });
 };
 
-const getClothingImage = (id, callback) => {
+const deleteClothingCatalog = (id, callback) => {
+    const sql = `DELETE FROM clothingcatalog WHERE ID = ?`;
+    db.run(sql, [id], function(err) {
+        callback(err);
+    });
+    console.log(`Deleted clothing catalog item with id ${id}`);
+};
+
+const getClothingImage = (name, callback) => {
     db.get(
-        `SELECT Image FROM clothingcatalog WHERE ID = ?`,
-        [id],
+        `SELECT Image FROM clothingcatalog WHERE Name = ?`,
+        [name],
         (err, row) => {
             if (err) {
                 callback(err, null);
@@ -276,7 +386,7 @@ module.exports = {
     addClothes,
     getAllClothes,
     getAllClothesFromCatalog,
-    deleteClothes,
+    deleteLaundryList,
     uploadClothing,
     createClothingCatalogTable,
     getClothingImage,
@@ -285,5 +395,8 @@ module.exports = {
     getAllLaundryList,
     uploadClothingCatalog,
     updateClothingItem,
-    clearLaundryList
+    clearLaundryList,
+    deleteClothingCatalog,
+    deleteClothes,
+    editClothingCatalog
 };

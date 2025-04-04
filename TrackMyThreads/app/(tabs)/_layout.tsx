@@ -15,44 +15,33 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: 'absolute',
-          },
-          default: {},
-        }),
+        tabBarActiveTintColor: '#3674B5', // Your app's blue color
+        tabBarInactiveTintColor: '#999',
+        tabBarStyle: {
+          backgroundColor: '#fff',
+          borderTopWidth: 1,
+          borderTopColor: '#e0e0e0',
+        },
       }}>
       <Tabs.Screen
-        name="mainmenu"
+        name="index"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color }) => <MaterialIcons name="home" size={28} color={color} />,
+          tabBarIcon: ({ color }) => <FontAwesome name="home" size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="clothingcatalog"
+        options={{
+          title: 'Catalog',
+          tabBarIcon: ({ color }) => <FontAwesome name="list" size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="laundry"
         options={{
           title: 'Laundry',
-          tabBarIcon: ({ color }) => <MaterialIcons name="local-laundry-service" size={28} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="clothingcatalog"
-        options={{
-          title: 'Clothes',
-          tabBarIcon: ({ color }) => <MaterialIcons name="style" size={28} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: 'Profile',
-          tabBarIcon: ({ color }) => <MaterialIcons name="person" size={28} color={color} />,
+          tabBarIcon: ({ color }) => <FontAwesome name="tint" size={24} color={color} />,
         }}
       />
     </Tabs>

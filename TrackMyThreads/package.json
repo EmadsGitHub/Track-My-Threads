@@ -43,7 +43,7 @@
     "react-native-webview": "13.12.5",
     "sqlite3": "^5.1.7",
     "expo-sqlite": "~15.1.2",
-    "undefined": "expo-sqlite/legacy"
+    "expo-image-picker": "~16.0.6"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

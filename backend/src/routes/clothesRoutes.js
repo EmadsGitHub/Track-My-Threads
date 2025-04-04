@@ -21,7 +21,7 @@ const ClothesController = require('../controllers/clothesController');
  */
 router.get('/clothingcatalog', ClothesController.getAllClothesFromCatalog);
 router.get('/', ClothesController.getAllClothes);
-router.get('/image/:id', ClothesController.getClothingImage);
+router.get('/image/:name', ClothesController.getClothingImage);
 router.get('/laundrylist', ClothesController.getAllLaundryList);
 
 /**
@@ -34,6 +34,7 @@ router.post('/laundrylist', ClothesController.uploadLaundryList);
 /**
  * PUT /api/clothes
  */
+router.put('/clothingcatalog/:name', ClothesController.editClothingCatalog);
 router.put('/:name', ClothesController.updateClothingItem);
 
 /**
@@ -42,7 +43,9 @@ router.put('/:name', ClothesController.updateClothingItem);
  */
 // Place the laundrylist/all route before the /:id route to avoid conflicts
 router.delete('/laundrylist/all', ClothesController.clearLaundryList);
-router.delete('/:name', ClothesController.deleteClothes);
+router.delete('/laundrylist/:id', ClothesController.deleteLaundryList); 
+router.delete('/clothingcatalog/:id', ClothesController.deleteClothingCatalog);
+router.delete('/:id', ClothesController.deleteClothes);
 
 /**
  * POST /api/clothes/upload

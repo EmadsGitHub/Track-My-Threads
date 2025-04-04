@@ -28,7 +28,8 @@ app.use(cors({
 }));
 
 // bodyParser.json() parses incoming JSON requests and puts the data in req.body
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: '50mb' }));
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 
 // Mount the clothes routes at /api/clothes
 // This means all routes defined in clothesRoutes.js will be prefixed with /api/clothes
