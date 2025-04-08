@@ -34,7 +34,7 @@ When an item reaches its configured maximum wears, it automatically appears in y
 <br>
 <br>
 <br>
-<div style="display: flex; flex-wrap: wrap; gap: 10px;">
+<div style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;">
   <img src="examples/IMG_5817.PNG" width="150" alt="Screenshot 1">
   <img src="examples/IMG_5818.PNG" width="150" alt="Screenshot 2">
   <img src="examples/IMG_5819.PNG" width="150" alt="Screenshot 3">
