@@ -35,9 +35,9 @@ When an item reaches its configured maximum wears, it automatically appears in y
 <br>
 <br>
 <div align="center">
-  <img src="examples/IMG_5817.PNG" width="200" alt="Screenshot 1">
-  <img src="examples/IMG_5818.PNG" width="200" alt="Screenshot 2">
-  <img src="examples/IMG_5819.PNG" width="200" alt="Screenshot 3">
-  <img src="examples/IMG_5820.PNG" width="200" alt="Screenshot 4">
-  <img src="examples/IMG_5821.PNG" width="200" alt="Screenshot 5">
+  <img src="examples/IMG_5817.PNG" width="150" alt="Screenshot 1">
+  <img src="examples/IMG_5818.PNG" width="150" alt="Screenshot 2">
+  <img src="examples/IMG_5819.PNG" width="150" alt="Screenshot 3">
+  <img src="examples/IMG_5820.PNG" width="150" alt="Screenshot 4">
+  <img src="examples/IMG_5821.PNG" width="150" alt="Screenshot 5">
 </div>
