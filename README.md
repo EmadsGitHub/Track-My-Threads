@@ -29,3 +29,9 @@ When an item reaches its configured maximum wears, it automatically appears in y
 - Node.js Backend: Express server handling data operations and image storage
 - Custom REST API
 - Figma Design
+
+![TrackMyThreads App Screenshot](examples/IMG_5817.png "Home Screen")
+![TrackMyThreads App Screenshot](examples/IMG_5818.png "Clothing Catalog")
+![TrackMyThreads App Screenshot](examples/IMG_5819.png "View Clothing")
+![TrackMyThreads App Screenshot](examples/IMG_5820.png "Add Clothing")
+![TrackMyThreads App Screenshot](examples/IMG_5821.png "View Laundry")
