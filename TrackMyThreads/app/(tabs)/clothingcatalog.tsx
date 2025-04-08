@@ -546,6 +546,7 @@ const ClothingCatalog = () => {
                                     value={newItemName}
                                     onChangeText={setNewItemName}
                                     placeholder="Enter clothing item name"
+                                    placeholderTextColor="#444"
                                 />
                             </View>
                             
@@ -557,6 +558,7 @@ const ClothingCatalog = () => {
                                     onChangeText={setNewItemWears}
                                     placeholder="Number of wears before washing"
                                     keyboardType="numeric"
+                                    placeholderTextColor="#444"
                                 />
                             </View>
                             
@@ -567,6 +569,7 @@ const ClothingCatalog = () => {
                                     value={newItemType}
                                     onChangeText={setNewItemType}
                                     placeholder="Type of clothing (e.g., Shirt, Pants)"
+                                    placeholderTextColor="#444"
                                 />
                             </View>
                         </ScrollView>
@@ -651,7 +654,7 @@ const styles = StyleSheet.create({
     header: {
         flex: 1,
         alignItems: 'center',
-        marginTop: -20,
+        marginTop: -50,
         paddingBottom: 20,
     },
     headerText: {
@@ -685,7 +688,7 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
         zIndex: 8,
         position: 'absolute',
-        top: responsiveHeight(20),
+        top: responsiveHeight(15),
         height: responsiveHeight(15),
     },
     configurationHeader: {
