@@ -30,8 +30,8 @@ When an item reaches its configured maximum wears, it automatically appears in y
 - Custom REST API
 - Figma Design
 
-![TrackMyThreads App Screenshot](examples\IMG_5817.PNG)
-![TrackMyThreads App Screenshot](examples\IMG_5818.PNG)
-![TrackMyThreads App Screenshot](examples\IMG_5819.PNG)
-![TrackMyThreads App Screenshot](examples\IMG_5820.PNG)
-![TrackMyThreads App Screenshot](examples\IMG_5821.PNG)
+![TrackMyThreads App Screenshot](examples/IMG_5817.PNG)
+![TrackMyThreads App Screenshot](examples/IMG_5818.PNG)
+![TrackMyThreads App Screenshot](examples/IMG_5819.PNG)
+![TrackMyThreads App Screenshot](examples/IMG_5820.PNG)
+![TrackMyThreads App Screenshot](examples/IMG_5821.PNG)
