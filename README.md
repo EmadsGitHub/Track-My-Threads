@@ -29,7 +29,11 @@ When an item reaches its configured maximum wears, it automatically appears in y
 - Node.js Backend: Express server handling data operations and image storage
 - Custom REST API
 - Figma Design
-
+<br>
+<br>
+<br>
+<br>
+<br>
 <div style="display: flex; flex-wrap: wrap; gap: 10px;">
   <img src="examples/IMG_5817.PNG" width="150" alt="Screenshot 1">
   <img src="examples/IMG_5818.PNG" width="150" alt="Screenshot 2">
