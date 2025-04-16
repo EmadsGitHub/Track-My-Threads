@@ -5,7 +5,7 @@ const path = require('path');
 const ClothesController = {
     // Function to get all clothes
     getAllClothes: (req, res) => {
-        ClothesModel.getAllClothes((err, clothes) => {
+        ClothesModel.getAllClothes(req.db, (err, clothes) => {
             if (err) {
                 return res.status(500).json({ error: err.message });
             }
@@ -14,7 +14,7 @@ const ClothesController = {
     },
 
     getAllClothesFromCatalog: (req, res) => {
-        ClothesModel.getAllClothesFromCatalog((err, clothes) => {
+        ClothesModel.getAllClothesFromCatalog(req.db, (err, clothes) => {
             if (err) {
                 return res.status(500).json({ error: err.message });
             }   
@@ -25,7 +25,7 @@ const ClothesController = {
     // Function to add clothes
     addClothes: (req, res) => {
         const { date, items } = req.body; // Expecting items to be an array
-        ClothesModel.addClothes(date, items, (err) => {
+        ClothesModel.addClothes(req.db, date, items, (err) => {
             if (err) {
                 return res.status(500).json({ error: err.message });
             }
@@ -34,7 +34,7 @@ const ClothesController = {
     },
     deleteClothes: (req, res) => {
         const id = req.params.id;
-        ClothesModel.deleteClothes(id, (err) => {
+        ClothesModel.deleteClothes(req.db, id, (err) => {
             if (err) {
                 return res.status(500).json({ error: err.message });
             }   
@@ -45,7 +45,7 @@ const ClothesController = {
 
     uploadClothing: (req, res) => {
         const { id, name, image, daysBeforeWash, wearsBeforeWash, configuredWears, type } = req.body;
-        ClothesModel.uploadClothing(id, name, image, daysBeforeWash, wearsBeforeWash, configuredWears, type, (err) => {
+        ClothesModel.uploadClothing(req.db, id, name, image, daysBeforeWash, wearsBeforeWash, configuredWears, type, (err) => {
             if (err) {
                 return res.status(500).json({ error: err.message });
             }
@@ -66,7 +66,7 @@ const ClothesController = {
         });
         
         ClothesModel.uploadClothingCatalog(
-            null,
+            req.db,
             Name,
             Image,
             DaysBeforeWash,
@@ -87,7 +87,7 @@ const ClothesController = {
     getClothingImage: (req, res) => {
         const name = req.params.name;
         
-        ClothesModel.getClothingImage(name, (err, imageData) => {
+        ClothesModel.getClothingImage(req.db, name, (err, imageData) => {
             if (err) {
                 return res.status(500).json({ error: err.message });
             }
@@ -116,7 +116,7 @@ const ClothesController = {
             return res.status(400).json({ error: 'wearsBeforeWash is required' });
         }
         
-        ClothesModel.updateClothingItem(name, wearsBeforeWash, lastWashed, (err) => {
+        ClothesModel.updateClothingItem(req.db, name, wearsBeforeWash, lastWashed, (err) => {
             if (err) {
                 return res.status(500).json({ error: err.message });
             }
@@ -133,7 +133,7 @@ const ClothesController = {
     editClothingCatalog: (req, res) => {
         const name = req.params.name;
         const { ConfiguredWears } = req.body;
-        ClothesModel.editClothingCatalog(name, ConfiguredWears, (err) => {
+        ClothesModel.editClothingCatalog(req.db, name, ConfiguredWears, (err) => {
             if (err) {
                 return res.status(500).json({ error: err.message });
             }
@@ -144,7 +144,7 @@ const ClothesController = {
     
     // Function to clear the laundry list
     clearLaundryList: (req, res) => {
-        ClothesModel.clearLaundryList((err, itemsCleared) => {
+        ClothesModel.clearLaundryList(req.db, (err, itemsCleared) => {
             if (err) {
                 return res.status(500).json({ error: err.message });
             }
@@ -159,7 +159,7 @@ const ClothesController = {
     // Function to delete clothes
     deleteLaundryList: (req, res) => {
         const id = req.params.id;
-        ClothesModel.deleteLaundryList(id, (err) => {
+        ClothesModel.deleteLaundryList(req.db, id, (err) => {
             if (err) {
                 return res.status(500).json({ error: err.message });
             }
@@ -168,7 +168,7 @@ const ClothesController = {
     },
     deleteClothingCatalog: (req, res) => {
         const id = req.params.id;
-        ClothesModel.deleteClothingCatalog(id, (err) => {
+        ClothesModel.deleteClothingCatalog(req.db, id, (err) => {
             if (err) {
                 return res.status(500).json({ error: err.message });
             }
@@ -176,7 +176,7 @@ const ClothesController = {
         });
     },
     createLaundryListTable: (req, res) => {
-        ClothesModel.createLaundryListTable((err) => {
+        ClothesModel.createLaundryListTable(req.db, (err) => {
             if (err) {
                 return res.status(500).json({ error: err.message });
             }
@@ -185,7 +185,7 @@ const ClothesController = {
     },
     uploadLaundryList: (req, res) => {
         const { name, daysBeforeWash, wearsBeforeWash, configuredWears, type } = req.body;
-        ClothesModel.uploadLaundryList(name, daysBeforeWash, wearsBeforeWash, configuredWears, type, (err) => {
+        ClothesModel.uploadLaundryList(req.db, name, daysBeforeWash, wearsBeforeWash, configuredWears, type, (err) => {
             if (err) {
                 return res.status(500).json({ error: err.message });
             }
@@ -193,7 +193,7 @@ const ClothesController = {
         });
     },
     getAllLaundryList: (req, res) => {
-        ClothesModel.getAllLaundryList((err, laundryList) => {
+        ClothesModel.getAllLaundryList(req.db, (err, laundryList) => {
             if (err) {
                 return res.status(500).json({ error: err.message });
             }
