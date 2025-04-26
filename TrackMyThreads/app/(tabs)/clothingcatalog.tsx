@@ -22,6 +22,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect } from '@react-navigation/native';
 import { router } from 'expo-router';
+import { api } from '../../services/api';
 
 // Define the ClothingItem interface to match your API response
 interface ClothingItem {
@@ -64,8 +65,8 @@ const responsiveHeight = (percentage: number) => {
 
 const retrieveClothingItems = async () => {
     try {
-        const response = await fetch('http://10.0.0.116:3000/api/clothes/clothingcatalog');
-        const data = await response.json();
+        
+        const data = await api.getAllClothesFromCatalog();
         
         return data;
     } catch (error) {
@@ -76,14 +77,9 @@ const retrieveClothingItems = async () => {
 
 const loadItemImage = async (itemName: string): Promise<string> => {
     try {
-        const response = await fetch(`http://10.0.0.116:3000/api/clothes/image/${itemName}`);
-        
-        if (!response.ok) {
-            return "";
-        }
-        
+
         // The response is just the base64 string
-        const base64Image = await response.text();
+        const base64Image = await api.getClothingImage(itemName);
         return base64Image;
     } catch (error) {
         console.error(`Error loading image for item ${itemName}:`, error);
@@ -144,17 +140,9 @@ const ClothingCatalog = () => {
 
     const handleDeleteItem = async (itemId: number) => {
         try{
-            const response = await fetch(`http://10.0.0.116:3000/api/clothes/clothingcatalog/${itemId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-            if (!response.ok) {
-                console.error('Error deleting item:', response.status);
-            }
+            await api.deleteClothingCatalog(itemId.toString());
         } catch (error) {
-            console.error('Error:', error);
+            console.error('Error deleting item:', error);
         }
         const items = await retrieveClothingItems();
         setClothingItems(items);
@@ -236,48 +224,33 @@ const ClothingCatalog = () => {
         console.log("Sending new clothing item to server...");
         console.log(`Item name: ${myNewClothingItem.Name}`);
         console.log(`Item type: ${myNewClothingItem.Type}`);
-        
         try {
             // Send the request to add the item
-            const response = await fetch('http://10.0.0.116:3000/api/clothes/clothingcatalog', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(myNewClothingItem)
-            });
+            await api.uploadClothingCatalog(myNewClothingItem);
             
-            if (response.ok) {
-                console.log('Item added successfully');
-                alert('Item added successfully!');
                 
                 // Refresh clothing items list
-                const items = await retrieveClothingItems();
-                setClothingItems(items);
+            const items = await retrieveClothingItems();
+            setClothingItems(items);
                 
                 // Load images for new items
-                const images = { ...itemImages };
-                for (const item of items) {
-                    if (!images[item.ID]) {
-                        const image = await loadItemImage(item.Name);
-                        if (image) {
-                            images[item.ID] = image;
-                        }
+            const images = { ...itemImages };
+            for (const item of items) {
+                if (!images[item.ID]) {
+                    const image = await loadItemImage(item.Name);
+                    if (image) {
+                        images[item.ID] = image;
                     }
                 }
-                setItemImages(images);
+            }
+            setItemImages(images);
                 
                 // Reset form and close modal
-                setNewItemName('');
-                setNewItemWears('');
-                setNewItemType('');
-                setNewItemImage(null);
-                setAddItemModalVisible(false);
-            } else {
-                const errorText = await response.text();
-                console.error('Failed to add item:', errorText);
-                alert('Failed to add item: ' + errorText);
-            }
+            setNewItemName('');
+            setNewItemWears('');
+            setNewItemType('');
+            setNewItemImage(null);
+            setAddItemModalVisible(false);
         } catch (error: any) {
             console.error('Error adding item:', error);
             alert('An error occurred while adding the item: ' + error.message);
@@ -295,31 +268,17 @@ const ClothingCatalog = () => {
             console.log(`Saving configurations: setting ${selectedItem.Name} ConfiguredWears to ${newConfiguredWears}`);
             
             // Use the specific endpoint for updating ConfiguredWears
-            const response = await fetch(`http://10.0.0.116:3000/api/clothes/clothingcatalog/${selectedItem.Name}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ 
-                    ConfiguredWears: newConfiguredWears 
-                })
+            await api.editClothingCatalog(selectedItem.Name, { 
+                ConfiguredWears: newConfiguredWears 
             });
             
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Error saving configurations:', response.status, errorText);
-                alert('Failed to save configurations. Please try again.');
-            } else {
-                console.log('Configuration saved successfully');
-                alert('Configurations saved successfully!');
-                
-                // Refresh clothing items list to show updated values
-                const items = await retrieveClothingItems();
-                setClothingItems(items);
+
+            const items = await retrieveClothingItems();
+            setClothingItems(items);
                 
                 // Close the modal
-                setIsConfigurationMode(false);
-            }
+            setIsConfigurationMode(false);
+            
         } catch (error) {
             console.error('Error saving configurations:', error);
             alert('Error saving configurations');

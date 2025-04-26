@@ -1,1 +1,53 @@
-node_modules
+# Node
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+
+# Virtual Environment
+venv/
+.venv/
+env/
+ENV/
+virtualenv/
+*env*/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+eggs/
+*.egg
+
+# Large binary files
+*.pyd
+*.dll
+*.lib
+*.bin
+*.h5
+*.pt
+*.pth
+*.onnx
+*.weights
+
+# Specific PyTorch and OpenCV paths
+**/torch/lib/
+**/cv2/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+*.db

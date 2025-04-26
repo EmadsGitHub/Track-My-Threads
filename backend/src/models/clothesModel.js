@@ -3,13 +3,6 @@ const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
 
-// Use a path relative to the current file
-const dbPath = path.resolve(__dirname, '../../clothes.db');
-
-console.log('Database path:', dbPath);
-
-// Open the database
-const db = new sqlite3.Database(dbPath);
 
 const myClothing = [
     {name: "Blue Hoodie", image: "backend/src/imagefolder/bluehoodie.png", daysBeforeWash: 0, wearsBeforeWash: 0, configuredWears: 2, type: "Top"},
@@ -24,7 +17,7 @@ const myClothing = [
     {name: "Maroon T-Shirt", image: "backend/src/imagefolder/maroontshirt.png", daysBeforeWash: 0, wearsBeforeWash: 0, configuredWears: 2, type: "Top"},
 ];
 
-const createLaundryListTable = () => {
+const createLaundryListTable = (db) => {
     const createTableSQL = `
         CREATE TABLE IF NOT EXISTS laundrylist (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -45,7 +38,7 @@ const createLaundryListTable = () => {
 };
 
 // Function to create the clothes table
-const createTable = () => {
+const createTable = (db) => {
     const createTableSQL = `
         CREATE TABLE IF NOT EXISTS clothes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -62,7 +55,7 @@ const createTable = () => {
     });
 };
 
-const createClothingCatalogTable = () => {  
+const createClothingCatalogTable = (db) => {  
     const createTableSQL = `
 
         CREATE TABLE IF NOT EXISTS clothingcatalog (
@@ -85,7 +78,7 @@ const createClothingCatalogTable = () => {
         console.log('Table "clothingcatalog" created or already exists.');
     });
 };
-const uploadClothing=(id, name, image, daysBeforeWash, wearsBeforeWash, configuredWears, type, callback)=>{
+const uploadClothing=(db, id, name, image, daysBeforeWash, wearsBeforeWash, configuredWears, type, callback)=>{
     const sql = `
         INSERT INTO clothingcatalog (ID, Name, Image, DaysBeforeWash, WearsBeforeWash, ConfiguredWears, Type)
         VALUES (?, ?, ?, ?, ?, ?, ?);
@@ -98,7 +91,7 @@ const uploadClothing=(id, name, image, daysBeforeWash, wearsBeforeWash, configur
     });
 }
 // Function to add items to the database for a specific date
-const addClothes = (date, items, callback) => {
+const addClothes = (db, date, items, callback) => {
     // Keep track of how many items have been processed
     let completedCount = 0;
     let hasError = false;
@@ -134,7 +127,7 @@ const addClothes = (date, items, callback) => {
     });
 };
 
-const deleteLaundryList = (id, callback) => {
+const deleteLaundryList = (db, id, callback) => {
     const sql = `
         DELETE FROM laundrylist WHERE id = ?
     `;
@@ -152,7 +145,7 @@ const deleteLaundryList = (id, callback) => {
     
 };
 // Function to get all clothes
-const getAllClothesFromCatalog = (callback) => {
+const getAllClothesFromCatalog = (db, callback) => {
     db.all(
         `SELECT ID, Name, DaysBeforeWash, WearsBeforeWash, ConfiguredWears, Type, LastWashed 
          FROM clothingcatalog`,
@@ -167,7 +160,7 @@ const getAllClothesFromCatalog = (callback) => {
       );
 };
 
-const getAllClothes = (callback) => {
+const getAllClothes = (db, callback) => {
     db.all(
         `SELECT * FROM clothes`,
         (err, rows) => {
@@ -176,7 +169,7 @@ const getAllClothes = (callback) => {
     );
 };
 
-const deleteClothes = (id, callback) => {
+const deleteClothes = (db, id, callback) => {
     const sql = `DELETE FROM clothes WHERE id = ?`;
     db.run(sql, [id], function(err) {
         if (err) {
@@ -189,7 +182,7 @@ const deleteClothes = (id, callback) => {
     });
 };
 
-const uploadClothingCatalog = (id, name, image, daysBeforeWash, wearsBeforeWash, configuredWears, type, lastWashed, callback) => {
+const uploadClothingCatalog = (db, id, name, image, daysBeforeWash, wearsBeforeWash, configuredWears, type, lastWashed, callback) => {
     // Convert base64 image to buffer if it's a string (from frontend)
     let imageBuffer;
     
@@ -242,7 +235,7 @@ const uploadClothingCatalog = (id, name, image, daysBeforeWash, wearsBeforeWash,
 }
 
 // Function to update a clothing item in the catalog
-const updateClothingItem = (name, wearsBeforeWash, lastWashed, callback) => {
+const updateClothingItem = (db, name, wearsBeforeWash, lastWashed, callback) => {
     console.log(`Updating clothing item ${name} to set wear count to ${wearsBeforeWash} and last washed to ${lastWashed || 'null'}`);
     
     // If lastWashed is provided, update it along with the wear count
@@ -274,7 +267,7 @@ const updateClothingItem = (name, wearsBeforeWash, lastWashed, callback) => {
     });
 };
 
-const editClothingCatalog = (name, ConfiguredWears, callback) => {
+const editClothingCatalog = (db, name, ConfiguredWears, callback) => {
     console.log(`Attempting to update ConfiguredWears for item ${name} to ${ConfiguredWears}`);
     
     const sql = `UPDATE clothingcatalog SET ConfiguredWears = ? WHERE Name = ?`;
@@ -296,7 +289,7 @@ const editClothingCatalog = (name, ConfiguredWears, callback) => {
 };
 
 // Function to clear the laundry list
-const clearLaundryList = (callback) => {
+const clearLaundryList = (db, callback) => {
     console.log('Clearing all items from laundry list');
     const sql = `DELETE FROM laundrylist`;
     
@@ -311,7 +304,7 @@ const clearLaundryList = (callback) => {
     });
 };
 
-const deleteClothingCatalog = (id, callback) => {
+const deleteClothingCatalog = (db, id, callback) => {
     const sql = `DELETE FROM clothingcatalog WHERE ID = ?`;
     db.run(sql, [id], function(err) {
         callback(err);
@@ -319,7 +312,7 @@ const deleteClothingCatalog = (id, callback) => {
     console.log(`Deleted clothing catalog item with id ${id}`);
 };
 
-const getClothingImage = (name, callback) => {
+const getClothingImage = (db, name, callback) => {
     db.get(
         `SELECT Image FROM clothingcatalog WHERE Name = ?`,
         [name],
@@ -336,7 +329,7 @@ const getClothingImage = (name, callback) => {
         }
     );
 };
-const uploadLaundryList = (name, daysBeforeWash, wearsBeforeWash, configuredWears, type, callback = () => {}) => {
+const uploadLaundryList = (db, name, daysBeforeWash, wearsBeforeWash, configuredWears, type, callback = () => {}) => {
         // Find the matching item in myClothing array
     let matchingItem = myClothing.find(item => item.name === name);
     
@@ -369,7 +362,7 @@ const uploadLaundryList = (name, daysBeforeWash, wearsBeforeWash, configuredWear
     }
 };
 
-const getAllLaundryList = (callback) => {
+const getAllLaundryList = (db, callback) => {
     db.all(
         `SELECT id, name, daysBeforeWash, wearsBeforeWash, configuredWears, type FROM laundrylist`,
         (err, rows) => {
@@ -378,9 +371,15 @@ const getAllLaundryList = (callback) => {
     );
 };
 // Initialize the database and create the table
-createTable();
-createClothingCatalogTable();
-createLaundryListTable();
+const initializeTables = (db, callback) => {
+    // Create all your tables
+    createTable(db);
+    createClothingCatalogTable(db);
+    createLaundryListTable(db);
+    
+    // Call the callback when done
+    if (callback) callback(null);
+};
 // Export the model functions
 module.exports = {
     addClothes,
@@ -398,5 +397,6 @@ module.exports = {
     clearLaundryList,
     deleteClothingCatalog,
     deleteClothes,
-    editClothingCatalog
+    editClothingCatalog,
+    initializeTables
 };
