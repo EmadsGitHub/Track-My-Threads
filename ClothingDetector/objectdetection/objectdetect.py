@@ -36,30 +36,17 @@ def detect_clothing(show_gui=False):
     model = inference.get_model(model_id, os.getenv("ROBOFLOW_API_KEY"))
 
     # Location of test set images
-    max_retries = 5
-    retry_count = 0
-    emad = None
-    
-    while retry_count < max_retries:
-        try:
-            print(f"Attempt {retry_count + 1}/{max_retries} to connect to camera at http://10.0.0.34:81/stream")
-            emad = cv2.VideoCapture('http://10.0.0.34:81/stream')
-            
-            # Check if camera opened successfully
-            if emad.isOpened():
-                print("Successfully connected to camera stream!")
-                break
-            else:
-                print("Failed to open camera stream. Retrying...")
-                retry_count += 1
-                time.sleep(2)  # Wait before retry
-        except Exception as e:
-            print(f"Error connecting to camera stream: {e}")
-            retry_count += 1
-            time.sleep(2)  # Wait before retry
-    
-    if emad is None or not emad.isOpened():
-        print("Error: Could not connect to camera stream after multiple attempts")
+    try:
+        # Update this URL to match your ESP32's current IP address and port
+        # The original URL was: emad = cv2.VideoCapture('http://10.0.0.34:81/stream')
+        emad = cv2.VideoCapture('http://10.0.0.97:81/stream')
+        
+        # Check if camera opened successfully
+        if not emad.isOpened():
+            print("Error: Could not connect to camera stream at http://10.0.0.97:81/stream")
+            return []
+    except Exception as e:
+        print(f"Error connecting to camera stream: {e}")
         return []
 
     width = 640
