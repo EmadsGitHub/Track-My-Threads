@@ -13,6 +13,7 @@ import React, { useEffect, useState } from 'react';
 import { Dimensions, Platform, PixelRatio, Modal } from 'react-native';
 import { DateData } from 'react-native-calendars';
 import { Calendar } from 'react-native-calendars';
+import { api } from '../../services/api';
 import { 
     View, 
     Text, 
@@ -123,15 +124,13 @@ interface ClothingCatalog {
 }
 
 const retrieveClothingItems = async (): Promise<ClothingCatalog[]> => {
-    const response = await fetch('http://10.0.0.116:3000/api/clothes/clothingcatalog', {
-        method: 'GET',
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-        },
-    });
-    const data = await response.json();
-    return data;
+    try {
+        const data = await api.getAllClothesFromCatalog();
+        return data;
+    } catch (error) {
+        console.error('Error fetching clothing catalog:', error);
+        return [];
+    }
 };
 
 const HomeScreen = () => {
@@ -179,19 +178,7 @@ const HomeScreen = () => {
     // Function to fetch clothes
     const fetchClothes = async () => {
         try {
-            const response = await fetch('http://10.0.0.116:3000/api/clothes', {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                },
-            });
-            
-            if (!response.ok) {
-                throw new Error('Network response was not ok: ' + response.status);
-            }
-            
-            const data = await response.json();
+            const data = await api.getAllClothes();
             const filteredClothes = data.filter((item: ClothingItem) => item.date === DaySelected);
             setClothes(filteredClothes);
         } catch (error) {
@@ -203,23 +190,11 @@ const HomeScreen = () => {
     const updateWearCount = async () => {
         try {
             // Step 1: Get all clothing items from catalog
-            const clothingCatalog = await retrieveClothingItems();
+            const clothingCatalog = await api.getAllClothesFromCatalog();
             console.log('Retrieved clothing catalog:', clothingCatalog.length, 'items');
             
             // Step 2: Get all clothing wear records
-            const response = await fetch('http://10.0.0.116:3000/api/clothes', {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                },
-            });
-            
-            if (!response.ok) {
-                throw new Error('Network response was not ok: ' + response.status);
-            }
-            
-            const allClothingRecords = await response.json();
+            const allClothingRecords = await api.getAllClothes();
             console.log('Retrieved wear records:', allClothingRecords.length, 'records');
             
             const currentDate = new Date();
@@ -253,18 +228,7 @@ const HomeScreen = () => {
                     console.log(`  Updating ${item.Name} with ${wearsCount} wears`);
                     
                     try {
-                        const updateResponse = await fetch(`http://10.0.0.116:3000/api/clothes/${item.Name}`, {
-                            method: 'PUT',
-                            headers: {
-                                'Accept': 'application/json',
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({ wearsBeforeWash: wearsCount }),
-                        });
-                        
-                        if (!updateResponse.ok) {
-                            console.error(`Failed to update wear count for ${item.Name}: ${updateResponse.status}`);
-                        }
+                        await api.updateClothingItem(item.Name, { wearsBeforeWash: wearsCount });
                     } catch (error) {
                         console.error('Error updating wear count:', error);
                     }
@@ -287,9 +251,7 @@ const HomeScreen = () => {
     // Function to handle deletion
     const handleDelete = async (item: ClothingItem) => {
         try {
-            await fetch(`http://10.0.0.116:3000/api/clothes/${item.id}`, {
-                method: 'DELETE',
-            });
+            await api.deleteClothes(item.id.toString());
         } catch (error) {
             console.error('Error deleting clothes:', error);
         }
@@ -325,53 +287,20 @@ const HomeScreen = () => {
         }
         
         try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-            
             // Proceed with adding clothes without wear count updates
             console.log('Adding clothes to server...');
             
             try {
-                const response = await fetch(`http://10.0.0.116:3000/api/clothes`, {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        date: DaySelected, 
-                        items: itemsToAdd.map(item => item.Name)
-                    }),
-                    signal: controller.signal
+                await api.addClothes({
+                    date: DaySelected, 
+                    items: itemsToAdd.map(item => item.Name)
                 });
-                
-                clearTimeout(timeoutId); // Clear the timeout if fetch completes
-                
-                console.log('Server response status:', response.status);
-                
-                // Check response status before proceeding
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`Server error: ${response.status} - ${errorText}`);
-                }
                 
                 console.log('POST request successful');
                 
-                // Try to parse JSON response if applicable
-                try {
-                    const responseData = await response.json();
-                    console.log('Response data:', responseData);
-                } catch (jsonError) {
-                    console.log('Response not JSON or empty');
-                }
-                
-            } catch (fetchError: any) {
-                if (fetchError.name === 'AbortError') {
-                    console.error('Request timed out after 5 seconds');
-                } else {
-                    console.error('Fetch error:', fetchError);
-                }
-                throw fetchError;
+            } catch (error) {
+                console.error('Error adding clothes:', error);
+                throw error;
             }
             
             console.log('Clearing selected items...');

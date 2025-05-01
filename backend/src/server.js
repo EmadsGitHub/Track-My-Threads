@@ -76,6 +76,11 @@ app.use('/api/clothes', clothesRoutes);
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to the Track My Threads API' });
 });
+app.get('/api/device/id', (req, res) => {
+  // This would need to get the device ID from your database
+  const deviceId = req.headers['device-id'] || req.ip.replace(/[:.]/g, '_');
+  res.json({ deviceId: deviceId });
+});
 
 // Start the server
 app.listen(PORT, '0.0.0.0', () => {

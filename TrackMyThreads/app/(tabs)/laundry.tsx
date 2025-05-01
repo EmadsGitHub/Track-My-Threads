@@ -12,6 +12,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { router } from 'expo-router';
 import { Dimensions, Platform, PixelRatio } from 'react-native';
 import SideBanner from '../components/sidebanner';
+import { api } from '../../services/api';
 import { 
     View, 
     Text, 
@@ -71,20 +72,8 @@ const retrieveClothingItems = async (): Promise<ClothingItem[]> => {
     try {
         console.log('Fetching clothing metadata from API...');
         
-        // This endpoint returns metadata only (no images)
-        const response = await fetch('http://10.0.0.116:3000/api/clothes/clothingcatalog', {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        if (!response.ok) {
-            return [];
-        }
-        
-        const jsonData = await response.json();
+        // Use the api service to get clothing catalog
+        const jsonData = await api.getAllClothesFromCatalog();
         
         // Map the response to match our ClothingItem interface
         const mappedItems: ClothingItem[] = jsonData.map((item: any) => ({
@@ -95,7 +84,7 @@ const retrieveClothingItems = async (): Promise<ClothingItem[]> => {
             wearsBeforeWash: item.WearsBeforeWash,
             configuredWears: item.ConfiguredWears,
             type: item.Type,
-            lastWashed: item.LastWashed // Add LastWashed from the API response
+            lastWashed: item.lastWashed // Make sure property name matches
         }));
         
         return mappedItems;
@@ -107,14 +96,8 @@ const retrieveClothingItems = async (): Promise<ClothingItem[]> => {
 
 const loadItemImage = async (itemName: string): Promise<string> => {
     try {
-        const response = await fetch(`http://10.0.0.116:3000/api/clothes/image/${itemName}`);
-        
-        if (!response.ok) {
-            return "";
-        }
-        
-        // The response is just the base64 string
-        const base64Image = await response.text();
+        // Use the api service to get clothing image
+        const base64Image = await api.getClothingImage(itemName);
         return base64Image;
     } catch (error) {
         console.error(`Error loading image for item ${itemName}:`, error);
@@ -155,9 +138,8 @@ const Laundry = () => {
             const items = await retrieveClothingItems();
             setDatabaseItems(items);
             
-            // Get current laundry items
-            const laundryResponse = await fetch('http://10.0.0.116:3000/api/clothes/laundrylist');
-            const existingLaundryItems = await laundryResponse.json();
+            // Get current laundry items using API service
+            const existingLaundryItems = await api.getAllLaundryList();
             
             // Extract the names of items already in the laundry list for efficient comparison
             const existingLaundryNames = new Set(existingLaundryItems.map((item: any) => item.name));
@@ -184,17 +166,9 @@ const Laundry = () => {
                         type: item.type
                     };
                     
-                    const response = await fetch('http://10.0.0.116:3000/api/clothes/laundrylist', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(uploadItem)
-                    });
+                    // Use the API service to upload to the server
+                    await api.uploadLaundryList(uploadItem);
                     
-                    if (!response.ok) {
-                        console.error(`Failed to add ${item.name} to laundry list: ${response.status}`);
-                    }
                 } catch (error) {
                     console.error(`Error adding ${item.name} to laundry list:`, error);
                 }
@@ -237,28 +211,14 @@ const Laundry = () => {
                 console.log(`Processing item: ${item.name} (ID: ${item.id})`);
                 
                 try {
-                    // Use PUT request to update each item's wear count to 0 and set LastWashed date
-                    const response = await fetch(`http://10.0.0.116:3000/api/clothes/${item.name}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ 
-                            wearsBeforeWash: 0,
-                            lastWashed: currentDate 
-                        })
+                    // Use the API service to update each item's wear count and last washed date
+                    await api.updateClothingItem(item.name, { 
+                        wearsBeforeWash: 0,
+                        lastWashed: currentDate 
                     });
                     
-                    if (response.ok) {
-                        console.log(`Successfully marked ${item.name} as washed`);
-                        successCount++;
-                    } else {
-                        // Get error details
-                        const errorText = await response.text();
-                        console.log(`Failed to update item ${item.name}: ${response.status}`);
-                        console.log(`Error response: ${errorText.substring(0, 100)}...`);
-                        failureCount++;
-                    }
+                    console.log(`Successfully marked ${item.name} as washed`);
+                    successCount++;
                 } catch (error) {
                     console.error(`Error processing item ${item.name}:`, error);
                     failureCount++;
@@ -269,26 +229,9 @@ const Laundry = () => {
             if (itemsToUpdate.length > 0) {
                 try {
                     console.log("Attempting to clear laundry list...");
-                    const clearUrl = 'http://10.0.0.116:3000/api/clothes/laundrylist/all';
-                    console.log(`Sending DELETE request to: ${clearUrl}`);
                     
-                    const clearResponse = await fetch(clearUrl, {
-                        method: 'DELETE',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    });
-                    
-                    console.log(`Clear response status: ${clearResponse.status} ${clearResponse.statusText}`);
-                    
-                    if (clearResponse.ok) {
-                        const result = await clearResponse.json();
-                        console.log(`Cleared laundry list: ${result.itemsCleared} items removed`);
-                    } else {
-                        const errorText = await clearResponse.text();
-                        console.log(`Failed to clear laundry list: ${clearResponse.status}`);
-                        console.log(`Error response: ${errorText.substring(0, 200)}...`);
-                    }
+                    await api.clearLaundryList();
+                    console.log("Laundry list cleared successfully");
                 } catch (error) {
                     console.error('Error clearing laundry list:', error);
                 }
@@ -343,26 +286,16 @@ const Laundry = () => {
                     type: clothingItem.type
                 };
     
-                // Upload to the server
-                const response = await fetch(`http://10.0.0.116:3000/api/clothes/laundrylist`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(uploadItem)
-                });
+                // Use the API service to upload to the server
+                await api.uploadLaundryList(uploadItem);
                 
-                if (response.ok) {
-                    console.log(`Added ${clothingItem.name} to laundry list`);
-                    
-                    // Add to local state and reload the list
-                    setLaundryItems([...laundryItems, clothingItem]);
-                    
-                    // Update unselected items
-                    setUnselectedItems(unselectedItems.filter(item => item.name !== clothingItem.name));
-                } else {
-                    console.error(`Failed to add item to laundry list: ${response.status}`);
-                }
+                console.log(`Added ${clothingItem.name} to laundry list`);
+                
+                // Add to local state and reload the list
+                setLaundryItems([...laundryItems, clothingItem]);
+                
+                // Update unselected items
+                setUnselectedItems(unselectedItems.filter(item => item.name !== clothingItem.name));
             } catch (error) {
                 console.error('Error adding item to laundry list:', error);
             }
@@ -381,19 +314,7 @@ const Laundry = () => {
     const getLaundryList = async () => {
         setIsLoading(true);
         try {
-            const response = await fetch(`http://10.0.0.116:3000/api/clothes/laundrylist`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-            });
-            
-            if (!response.ok) {
-                setIsLoading(false);
-                return;
-            }
-            
-            const jsonData = await response.json();
+            const jsonData = await api.getAllLaundryList();
             console.log('Laundry list:', jsonData);
             setLaundryItems(jsonData);
             
@@ -419,18 +340,11 @@ const Laundry = () => {
         setLaundryItems(currentItems => 
             currentItems.filter(item => item.id !== itemToDelete.id)
         );
-        try{
-            const response = await fetch(`http://10.0.0.116:3000/api/clothes/laundrylist/${itemToDelete.id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-            if (!response.ok) {
-                console.error('Error deleting item:', response.status);
-            }
+        try {
+            await api.deleteLaundryList(itemToDelete.id.toString());
+            console.log(`Successfully deleted ${itemToDelete.name} from laundry list`);
         } catch (error) {
-            console.error('Error:', error);
+            console.error('Error deleting item:', error);
         }
     };
     
