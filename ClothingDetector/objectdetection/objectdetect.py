@@ -100,34 +100,9 @@ def detect_clothing(show_gui=False):
         "Navy Sweatpants": 0
     }
     last_time=time.time()
-    consecutive_failures = 0
-    max_failures = 10
-    
     while True:
         ret, frame = emad.read()
-        
-        # Check if frame is valid before processing
-        if not ret or frame is None:
-            print("Error: Failed to capture frame from camera stream")
-            consecutive_failures += 1
-            
-            if consecutive_failures >= max_failures:
-                print(f"Too many consecutive failures ({max_failures}). Giving up.")
-                break
-                
-            time.sleep(1)  # Wait a bit before trying again
-            continue
-        else:
-            consecutive_failures = 0  # Reset the counter on success
-            print("Successfully captured frame from camera stream")
-            
-        try:
-            frame = cv2.resize(frame, (width, height))
-        except Exception as e:
-            print(f"OpenCV error during resize: {e}")
-            consecutive_failures += 1
-            time.sleep(1)
-            continue
+        frame = cv2.resize(frame, (width, height))
 
         results = model.infer(frame, confidence=0.80, overlap=30)[0]
         detections = sv.Detections.from_inference(results)
