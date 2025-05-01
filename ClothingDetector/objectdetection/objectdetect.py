@@ -36,7 +36,31 @@ def detect_clothing(show_gui=False):
     model = inference.get_model(model_id, os.getenv("ROBOFLOW_API_KEY"))
 
     # Location of test set images
-    emad = cv2.VideoCapture('http://10.0.0.34:81/stream')
+    max_retries = 5
+    retry_count = 0
+    emad = None
+    
+    while retry_count < max_retries:
+        try:
+            print(f"Attempt {retry_count + 1}/{max_retries} to connect to camera at http://10.0.0.34:81/stream")
+            emad = cv2.VideoCapture('http://10.0.0.34:81/stream')
+            
+            # Check if camera opened successfully
+            if emad.isOpened():
+                print("Successfully connected to camera stream!")
+                break
+            else:
+                print("Failed to open camera stream. Retrying...")
+                retry_count += 1
+                time.sleep(2)  # Wait before retry
+        except Exception as e:
+            print(f"Error connecting to camera stream: {e}")
+            retry_count += 1
+            time.sleep(2)  # Wait before retry
+    
+    if emad is None or not emad.isOpened():
+        print("Error: Could not connect to camera stream after multiple attempts")
+        return []
 
     width = 640
     height = 360
@@ -76,9 +100,34 @@ def detect_clothing(show_gui=False):
         "Navy Sweatpants": 0
     }
     last_time=time.time()
+    consecutive_failures = 0
+    max_failures = 10
+    
     while True:
         ret, frame = emad.read()
-        frame = cv2.resize(frame, (width, height))
+        
+        # Check if frame is valid before processing
+        if not ret or frame is None:
+            print("Error: Failed to capture frame from camera stream")
+            consecutive_failures += 1
+            
+            if consecutive_failures >= max_failures:
+                print(f"Too many consecutive failures ({max_failures}). Giving up.")
+                break
+                
+            time.sleep(1)  # Wait a bit before trying again
+            continue
+        else:
+            consecutive_failures = 0  # Reset the counter on success
+            print("Successfully captured frame from camera stream")
+            
+        try:
+            frame = cv2.resize(frame, (width, height))
+        except Exception as e:
+            print(f"OpenCV error during resize: {e}")
+            consecutive_failures += 1
+            time.sleep(1)
+            continue
 
         results = model.infer(frame, confidence=0.80, overlap=30)[0]
         detections = sv.Detections.from_inference(results)
