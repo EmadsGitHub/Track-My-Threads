@@ -160,6 +160,60 @@ const getAllClothesFromCatalog = (db, callback) => {
       );
 };
 
+// Function to check clothing items and add them to laundry list if needed
+const checkAndAddToLaundry = (db, callback) => {
+    // First get all clothes from catalog
+    getAllClothesFromCatalog(db, (err, clothingItems) => {
+        if (err) {
+            return callback(err);
+        }
+        
+        // Track how many items need to be processed
+        let itemsToProcess = 0;
+        let processedItems = 0;
+        let errors = [];
+        
+        // Check each item to see if it needs washing
+        clothingItems.forEach(item => {
+            // If item has reached configured wears limit, add to laundry list
+            if (item.WearsBeforeWash >= item.ConfiguredWears) {
+                itemsToProcess++;
+                console.log(`Adding ${item.Name} to laundry list`);
+                // Add to laundry list
+                uploadLaundryList(
+                    db, 
+                    item.Name, 
+                    item.DaysBeforeWash, 
+                    item.WearsBeforeWash, 
+                    item.ConfiguredWears, 
+                    item.Type, 
+                    (err) => {
+                        processedItems++;
+                        
+                        if (err) {
+                            errors.push(err);
+                        }
+                        
+                        // Check if all items have been processed
+                        if (processedItems === itemsToProcess) {
+                            if (errors.length > 0) {
+                                callback(errors[0], null); // Return the first error, clothes items, and count
+                            } else {
+                                callback(null, clothingItems); // Return clothes items and count of items added
+                            }
+                        }
+                    }
+                );
+            }
+        });
+        
+        // If no items needed washing, call the callback immediately with all clothing items
+        if (itemsToProcess === 0) {
+            callback(null, clothingItems);
+        }
+    });
+};
+
 const getAllClothes = (db, callback) => {
     db.all(
         `SELECT * FROM clothes`,
@@ -263,8 +317,46 @@ const updateClothingItem = (db, name, wearsBeforeWash, lastWashed, callback) => 
         }
         
         console.log(`Successfully updated wear count for item ${name} to ${wearsBeforeWash}${lastWashed ? ` and LastWashed to ${lastWashed}` : ''}`);
-        callback(null);
+        
     });
+    getAllClothesFromCatalog(db, (err, clothingItems) => {
+        if (err) {
+            return callback(err);
+        }
+        
+        // Track how many items need to be processed
+        let itemsToProcess = 0;
+        let processedItems = 0;
+        let errors = [];
+        
+        // Check each item to see if it needs washing
+        clothingItems.forEach(item => {
+            // If item has reached configured wears limit, add to laundry list
+            if (item.WearsBeforeWash >= item.ConfiguredWears) {
+                itemsToProcess++;
+                console.log(`Adding ${item.Name} to laundry list`);
+                // Add to laundry list
+                uploadLaundryList(
+                    db, 
+                    item.Name, 
+                    item.DaysBeforeWash, 
+                    item.WearsBeforeWash, 
+                    item.ConfiguredWears, 
+                    item.Type, 
+                    (err) => {
+                        processedItems++;
+                        
+                        if (err) {
+                            errors.push(err);
+                        }
+
+                    }
+                );
+            }
+        });
+        callback(null); 
+    })
+    
 };
 
 const editClothingCatalog = (db, name, ConfiguredWears, callback) => {
@@ -398,5 +490,6 @@ module.exports = {
     deleteClothingCatalog,
     deleteClothes,
     editClothingCatalog,
-    initializeTables
+    initializeTables,
+    checkAndAddToLaundry
 };

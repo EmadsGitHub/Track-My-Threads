@@ -7,21 +7,26 @@ import time
 import requests
 import urllib.parse
 from dotenv import load_dotenv
+import socket
+from datetime import datetime, date
 
 load_dotenv()
 
 from roboflow import Roboflow
 # Check if dataset already exists
 
-def get_device_id():
+def get_client_ip():
+    # Get the local machine's IP address
     try:
-        response = requests.get("http://10.0.0.116:3000/api/device/id", timeout=5)
-        if response.status_code == 200:
-            return response.json()["deviceId"]
-        else:
-            return "default-device-id"
-    except requests.exceptions.RequestException:
-        return "default-device-id"
+        # Create a socket connection to an external server
+        # This doesn't actually establish a connection, but gets the local IP
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))  # Google's DNS server
+        ip = s.getsockname()[0]
+        s.close()
+        return ip.replace(".", "_")  # Replace dots with underscores
+    except Exception:
+        return "127_0_0_1"  # Default to localhost if there's an error
 
 def detect_clothing(show_gui=False):
     highestvaluekeytops=""
@@ -36,18 +41,12 @@ def detect_clothing(show_gui=False):
     model = inference.get_model(model_id, os.getenv("ROBOFLOW_API_KEY"))
 
     # Location of test set images
-    try:
-        # Update this URL to match your ESP32's current IP address and port
-        # The original URL was: emad = cv2.VideoCapture('http://10.0.0.34:81/stream')
-        emad = cv2.VideoCapture('http://10.0.0.97:81/stream')
-        
-        # Check if camera opened successfully
-        if not emad.isOpened():
-            print("Error: Could not connect to camera stream at http://10.0.0.97:81/stream")
-            return []
-    except Exception as e:
-        print(f"Error connecting to camera stream: {e}")
-        return []
+    emad = cv2.VideoCapture('http://10.0.0.34:81/stream')
+    
+    # Check if camera opened successfully
+    if not emad.isOpened():
+        print("Error: Could not connect to camera stream")
+        return []  # Return empty list if camera not available
 
     width = 640
     height = 360
@@ -55,8 +54,9 @@ def detect_clothing(show_gui=False):
     currentWearsDB = {}
 
     try:
+        client_ip = "10.0.0.66"
         url = "http://10.0.0.116:3000/api/clothes/clothingcatalog"
-        response = requests.get(url, timeout=5)
+        response = requests.get(url, headers={"X-Forwarded-For": client_ip.replace("_", "."), "Content-Type": "application/json"}, timeout=5)
         if response.status_code == 200:
             data = response.json()
             print(data)
@@ -88,7 +88,15 @@ def detect_clothing(show_gui=False):
     }
     last_time=time.time()
     while True:
+        # Read a frame from the camera
         ret, frame = emad.read()
+        
+        # Check if frame was successfully read
+        if not ret or frame is None:
+            print("Error: Could not read frame from camera")
+            break  # Exit the loop if we can't get frames
+            
+        # Now we can safely resize the frame
         frame = cv2.resize(frame, (width, height))
 
         results = model.infer(frame, confidence=0.80, overlap=30)[0]
@@ -116,20 +124,23 @@ def detect_clothing(show_gui=False):
             detecteditems = [clothing for clothing in my_clothing.keys() if my_clothing[clothing] > 10]
             
             if len(detecteditems) > 0:
-                device_id = get_device_id()
-                print(device_id)
+                # Use the machine's IP address instead of device ID
+                client_ip = "10.0.0.66"
+                print(f"Using client IP: {client_ip}")
+                itemstoAdd = []
+                today = date.today()
                 for item in detecteditems:
                     print(f"You are wearing: {item}")
                     try:
                         encoded_clothing = urllib.parse.quote(item)
-                        send_data = requests.put(f'http://10.0.0.116:3000/api/clothes/{encoded_clothing}', 
-                                            json={"wearsBeforeWash": currentWearsDB.get(item, 0) + 1}, 
-                                            headers={"Device-ID": device_id, "Content-Type": "application/json"},
-                                            timeout=5)
-                        if send_data.status_code == 200:
-                            # Parse JSON response
-                            data = send_data.json()
-                            print(data)
+                        send_data = requests.put(
+                            f'http://10.0.0.116:3000/api/clothes/{encoded_clothing}', 
+                            json={"wearsBeforeWash": currentWearsDB.get(item, 0) + 1}, 
+                            headers={"X-Forwarded-For": client_ip.replace("_", "."), "Content-Type": "application/json"},
+                            timeout=5
+                        )
+                        
+                        # Try to get JSON response regardless of status code
                         try:
                             response_json = send_data.json()
                             print(f"Response JSON: {response_json}")
@@ -141,6 +152,20 @@ def detect_clothing(show_gui=False):
                         print(f"Status code: {send_data.status_code}")
                     except requests.exceptions.RequestException as e:
                         print(f"Error updating API: {e}")
+
+                    itemstoAdd.append(item)
+
+                try:
+                    send_data = requests.post(
+                        f'http://10.0.0.116:3000/api/clothes', 
+                        json={"date": today.isoformat(), "items": itemstoAdd}, 
+                        headers={"X-Forwarded-For": client_ip.replace("_", "."), "Content-Type": "application/json"},
+                        timeout=5
+                    )
+                    print(f"Response JSON: {send_data.json()}")
+                except requests.exceptions.RequestException as e:
+                    print(f"Error updating API: {e}")
+                            
     
             my_clothing = {
                 "Blue Hoodie": 0,

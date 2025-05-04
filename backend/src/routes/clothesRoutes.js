@@ -23,7 +23,7 @@ router.get('/clothingcatalog', ClothesController.getAllClothesFromCatalog);
 router.get('/', ClothesController.getAllClothes);
 router.get('/image/:name', ClothesController.getClothingImage);
 router.get('/laundrylist', ClothesController.getAllLaundryList);
-
+router.get('/checkandaddtolist', ClothesController.checkAndAddToLaundry);
 /**
  * POST /api/clothes
  */

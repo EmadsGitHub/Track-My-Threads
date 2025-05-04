@@ -73,7 +73,7 @@ const retrieveClothingItems = async (): Promise<ClothingItem[]> => {
         console.log('Fetching clothing metadata from API...');
         
         // Use the api service to get clothing catalog
-        const jsonData = await api.getAllClothesFromCatalog();
+        const jsonData = await api.checkAndAddToLaundry();
         
         // Map the response to match our ClothingItem interface
         const mappedItems: ClothingItem[] = jsonData.map((item: any) => ({

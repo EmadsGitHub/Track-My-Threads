@@ -21,6 +21,14 @@ const ClothesController = {
             res.json(clothes);
         });
     },
+    checkAndAddToLaundry: (req, res) => {
+        ClothesModel.checkAndAddToLaundry(req.db, (err, clothingItems) => {
+            if (err) {
+                return res.status(500).json({ error: err.message });
+            }
+            res.json(clothingItems);
+        });
+    },
 
     // Function to add clothes
     addClothes: (req, res) => {

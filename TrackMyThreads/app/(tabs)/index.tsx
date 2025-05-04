@@ -71,6 +71,7 @@ const CalendarScreen = ({selectedDate, setSelectedDate}: {selectedDate: string, 
                 console.log('selected day', daySelected);
                 setSelectedDate(daySelected.dateString);
                 }}
+                monthFormat={'MMMM'}
                 theme={{
                     'stylesheet.calendar.main': {
                         day: {
@@ -100,6 +101,7 @@ const CalendarScreen = ({selectedDate, setSelectedDate}: {selectedDate: string, 
                     dayContainerHeight: isTablet ? 30 : 20, // Larger height for tablets
                     textDayFontWeight: 'bold',
                     monthTextFontWeight: 'bold',
+                    
                 }}
             />
         </View>
@@ -125,7 +127,8 @@ interface ClothingCatalog {
 
 const retrieveClothingItems = async (): Promise<ClothingCatalog[]> => {
     try {
-        const data = await api.getAllClothesFromCatalog();
+        console.log('Fetching clothing catalog...');
+        const data = await api.checkAndAddToLaundry();
         return data;
     } catch (error) {
         console.error('Error fetching clothing catalog:', error);
@@ -190,7 +193,8 @@ const HomeScreen = () => {
     const updateWearCount = async () => {
         try {
             // Step 1: Get all clothing items from catalog
-            const clothingCatalog = await api.getAllClothesFromCatalog();
+            const clothingCatalog = await api.checkAndAddToLaundry();
+            console.log(clothingCatalog);
             console.log('Retrieved clothing catalog:', clothingCatalog.length, 'items');
             
             // Step 2: Get all clothing wear records

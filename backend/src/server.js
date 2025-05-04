@@ -28,7 +28,7 @@ app.use(cors({
   // Allow these HTTP methods
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   // Allow these headers
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Forwarded-For']
 }));
 
 // bodyParser.json() parses incoming JSON requests and puts the data in req.body
@@ -40,18 +40,21 @@ if (!fs.existsSync('./databases')) {
 }
 
 app.use((req, res, next) => {
-  // Get Device ID from header, fall back to IP if not available
-  const deviceId = req.headers['device-id'] || req.ip.replace(/[:.]/g, '_');
+  // Get client IP address, using X-Forwarded-For header if available (for proxy setups)
+  const clientIp = (req.headers['x-forwarded-for'] || req.ip || '127.0.0.1').replace(/[:.]/g, '_');
   
-  // Log which identifier is being used
-  const idType = req.headers['device-id'] ? 'Device ID' : 'IP address';
+  // Log the identifier being used
+  console.log(`Client IP: ${clientIp}`);
   
-  // Create a database path specific to this device
-  const dbPath = path.resolve(__dirname, `../databases/user_${deviceId}.db`);
-  console.log(`Using database for ${idType} ${deviceId}: ${dbPath}`);
+  // Create a database path specific to this IP
+  const dbPath = path.resolve(__dirname, `../databases/user_${clientIp}.db`);
+  console.log(`Using database: ${dbPath}`);
   
   // Create and attach the database to the request object
   req.db = new sqlite3.Database(dbPath);
+  
+  // Store the IP on the request for future use
+  req.clientIp = clientIp;
   
   // Continue to the next middleware
   next();
@@ -70,16 +73,14 @@ app.use((req, res, next) => {
 // This means all routes defined in clothesRoutes.js will be prefixed with /api/clothes
 app.use('/api/clothes', clothesRoutes);
 
-
-
 // Define a simple root route
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to the Track My Threads API' });
 });
-app.get('/api/device/id', (req, res) => {
-  // This would need to get the device ID from your database
-  const deviceId = req.headers['device-id'] || req.ip.replace(/[:.]/g, '_');
-  res.json({ deviceId: deviceId });
+
+// Return the client IP for identification
+app.get('/api/client-ip', (req, res) => {
+  res.json({ clientIp: req.clientIp });
 });
 
 // Start the server
