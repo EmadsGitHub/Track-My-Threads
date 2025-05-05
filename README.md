@@ -34,6 +34,13 @@ When an item reaches its configured maximum wears, it automatically appears in y
 <br>
 <br>
 <br>
+## Demo Video
+[![Video Title](https://img.youtube.com/vi/RkRljqU5kR8/0.jpg)](https://www.youtube.com/watch?v=XXXXXXXXXXX)
+<br>
+<br>
+<br>
+<br>
+<br>
 <div align="center">
   <img src="examples/IMG_5817.PNG" width="150" alt="Screenshot 1">
   <img src="examples/IMG_5818.PNG" width="150" alt="Screenshot 2">
