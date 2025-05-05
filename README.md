@@ -35,6 +35,8 @@ When an item reaches its configured maximum wears, it automatically appears in y
 <br>
 <br>
 ## Demo Video
+
+
 [![Watch the video](https://img.youtube.com/vi/RkRljqU5kR8/maxresdefault.jpg)](https://youtu.be/RkRljqU5kR8)
 ### [Watch this video on YouTube](https://youtu.be/RkRljqU5kR8)
 <br>
