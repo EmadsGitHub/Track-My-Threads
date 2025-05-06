@@ -5,6 +5,7 @@
  */
 
 // Import required packages
+const dotenv = require('dotenv');
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -18,7 +19,7 @@ const clothesRoutes = require('./routes/clothesRoutes');
 
 // Create Express application
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || BACKEND_SERVER_PORT;
 
 // Configure middleware
 // CORS allows your API to be accessed from different domains

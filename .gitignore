@@ -11,6 +11,12 @@ env/
 ENV/
 virtualenv/
 *env*/
+.env
+.env.*
+.env.local
+.env.development
+.env.test
+.env.production
 
 # Python
 __pycache__/
@@ -51,3 +57,10 @@ eggs/
 .DS_Store
 Thumbs.db
 *.db
+
+# Configuration files with sensitive data
+config.h
+secrets.h
+wifi_credentials.h
+app.config.js
+config.js

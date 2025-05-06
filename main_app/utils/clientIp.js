@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
+import { DEFAULT_CLIENT_IP } from '../config';
 
 // Key for storing client IP in AsyncStorage (for offline use)
 const CLIENT_IP_KEY = 'track_my_threads_client_ip';
@@ -30,7 +31,7 @@ export const getClientIp = async () => {
         console.log('Using cached IP:', clientIp);
       } else {
         // If no cached IP either, use a fallback
-        clientIp = '127.0.0.1';
+        clientIp = DEFAULT_CLIENT_IP;
         console.log('Using fallback IP:', clientIp);
         await AsyncStorage.setItem(CLIENT_IP_KEY, clientIp);
       }
@@ -40,6 +41,6 @@ export const getClientIp = async () => {
   } catch (error) {
     console.error('Error getting client IP:', error);
     // Fallback to localhost if there's an error
-    return '127.0.0.1';
+    return DEFAULT_CLIENT_IP;
   }
 }; 

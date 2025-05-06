@@ -1,7 +1,9 @@
 import { getClientIp } from '../utils/clientIp';
+import { BACKEND_SERVER_IP, BACKEND_SERVER_PORT } from '../config';
+
 
 // Base URL for your API
-const API_BASE_URL = 'http://10.0.0.116:3000/api';
+const API_BASE_URL = `http://${BACKEND_SERVER_IP}:${BACKEND_SERVER_PORT}/api`;
 
 /**
  * Performs a fetch request with the client IP header

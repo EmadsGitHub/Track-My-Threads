@@ -8,6 +8,8 @@ import requests
 import urllib.parse
 from dotenv import load_dotenv
 import socket
+import os
+
 from datetime import datetime, date
 
 load_dotenv()
@@ -41,7 +43,7 @@ def detect_clothing(show_gui=False):
     model = inference.get_model(model_id, os.getenv("ROBOFLOW_API_KEY"))
 
     # Location of test set images
-    emad = cv2.VideoCapture('http://10.0.0.34:81/stream')
+    emad = cv2.VideoCapture(f'http://{os.getenv("CAMERA_STREAM_IP")}:{os.getenv("CAMERA_STREAM_PORT")}/stream')
     
     # Check if camera opened successfully
     if not emad.isOpened():
@@ -54,8 +56,8 @@ def detect_clothing(show_gui=False):
     currentWearsDB = {}
 
     try:
-        client_ip = "10.0.0.66"
-        url = "http://10.0.0.116:3000/api/clothes/clothingcatalog"
+        client_ip = os.getenv("DEFAULT_CLIENT_IP")
+        url = f"http://{os.getenv("BACKEND_SERVER_IP")}:{os.getenv("BACKEND_SERVER_PORT")}/api/clothes/clothingcatalog"
         response = requests.get(url, headers={"X-Forwarded-For": client_ip.replace("_", "."), "Content-Type": "application/json"}, timeout=5)
         if response.status_code == 200:
             data = response.json()
@@ -125,7 +127,7 @@ def detect_clothing(show_gui=False):
             
             if len(detecteditems) > 0:
                 # Use the machine's IP address instead of device ID
-                client_ip = "10.0.0.66"
+                client_ip = os.getenv("DEFAULT_CLIENT_IP")
                 print(f"Using client IP: {client_ip}")
                 itemstoAdd = []
                 today = date.today()
@@ -134,7 +136,7 @@ def detect_clothing(show_gui=False):
                     try:
                         encoded_clothing = urllib.parse.quote(item)
                         send_data = requests.put(
-                            f'http://10.0.0.116:3000/api/clothes/{encoded_clothing}', 
+                            f'http://{os.getenv("BACKEND_SERVER_IP")}:{os.getenv("BACKEND_SERVER_PORT")}/api/clothes/{encoded_clothing}', 
                             json={"wearsBeforeWash": currentWearsDB.get(item, 0) + 1}, 
                             headers={"X-Forwarded-For": client_ip.replace("_", "."), "Content-Type": "application/json"},
                             timeout=5
@@ -157,7 +159,7 @@ def detect_clothing(show_gui=False):
 
                 try:
                     send_data = requests.post(
-                        f'http://10.0.0.116:3000/api/clothes', 
+                        f'http://{os.getenv("BACKEND_SERVER_IP")}:{os.getenv("BACKEND_SERVER_PORT")}/api/clothes', 
                         json={"date": today.isoformat(), "items": itemstoAdd}, 
                         headers={"X-Forwarded-For": client_ip.replace("_", "."), "Content-Type": "application/json"},
                         timeout=5
